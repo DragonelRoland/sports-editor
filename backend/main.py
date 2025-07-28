@@ -38,6 +38,24 @@ os.makedirs(settings.JOBS_DIRECTORY, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=settings.UPLOAD_DIRECTORY), name="uploads")
 app.mount("/jobs", StaticFiles(directory=settings.JOBS_DIRECTORY), name="jobs")
 
+# Add a simple endpoint to serve videos with CORS headers for external access
+@app.get("/serve/{filename}")
+async def serve_video(filename: str):
+    from fastapi.responses import FileResponse
+    file_path = Path(settings.UPLOAD_DIRECTORY) / filename
+    if file_path.exists():
+        return FileResponse(
+            path=file_path,
+            media_type="video/mp4",
+            headers={
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "GET",
+                "Access-Control-Allow-Headers": "*",
+            }
+        )
+    else:
+        raise HTTPException(status_code=404, detail="File not found")
+
 # Initialize Runway client
 runway_client = RunwayClient()
 
@@ -49,37 +67,97 @@ async def root():
 async def health_check():
     return {"status": "healthy"}
 
+@app.post("/api/validate-videos")
+async def validate_videos(
+    character_file: UploadFile = File(...),
+    reference_file: UploadFile = File(...)
+):
+    """Quick validation to help users understand video requirements"""
+    
+    # Basic file validation
+    issues = []
+    
+    # Check character file
+    if not character_file.content_type or not character_file.content_type.startswith('video/'):
+        issues.append("Character file must be a video")
+    elif character_file.size and character_file.size > settings.MAX_FILE_SIZE:
+        issues.append("Character file too large")
+    
+    # Check reference file  
+    if not reference_file.content_type or not reference_file.content_type.startswith('video/'):
+        issues.append("Reference file must be a video")
+    elif reference_file.size and reference_file.size > settings.MAX_FILE_SIZE:
+        issues.append("Reference file too large")
+    
+    if issues:
+        return {"valid": False, "issues": issues}
+    
+    # Return guidance for Act Two requirements
+    return {
+        "valid": True,
+        "guidance": {
+            "requirements": [
+                "Both videos must show clear, visible faces",
+                "Front-facing faces work best",
+                "Good lighting is essential", 
+                "Avoid motion blur or fast movements",
+                "Close-up or medium shots are preferred",
+                "Videos should be at least 1-2 seconds long"
+            ],
+            "tips": [
+                "Test with simple talking head videos first",
+                "Ensure faces are the main subject",
+                "Avoid profile shots or partially obscured faces"
+            ]
+        }
+    }
+
 @app.post("/api/upload")
 async def upload_video(
-    file: UploadFile = File(...),
-    prompt: str = Form(...)
+    character_file: UploadFile = File(...),
+    reference_file: UploadFile = File(...)
 ):
-    # Validate file type
-    if not file.content_type or not file.content_type.startswith('video/'):
-        raise HTTPException(status_code=400, detail="File must be a video")
+    # Validate character file
+    if not character_file.content_type or not character_file.content_type.startswith('video/'):
+        raise HTTPException(status_code=400, detail="Character file must be a video")
     
-    # Validate file size
-    if file.size and file.size > settings.MAX_FILE_SIZE:
-        raise HTTPException(status_code=400, detail="File too large")
+    if character_file.size and character_file.size > settings.MAX_FILE_SIZE:
+        raise HTTPException(status_code=400, detail="Character file too large")
+    
+    # Validate reference file
+    if not reference_file.content_type or not reference_file.content_type.startswith('video/'):
+        raise HTTPException(status_code=400, detail="Reference file must be a video")
+    
+    if reference_file.size and reference_file.size > settings.MAX_FILE_SIZE:
+        raise HTTPException(status_code=400, detail="Reference file too large")
     
     # Generate job ID
     job_id = str(uuid.uuid4())
     
-    # Save uploaded file
-    file_extension = Path(file.filename).suffix
-    input_filename = f"{job_id}_input{file_extension}"
-    input_path = Path(settings.UPLOAD_DIRECTORY) / input_filename
+    # Save character file
+    char_extension = Path(character_file.filename).suffix
+    character_filename = f"{job_id}_character{char_extension}"
+    character_path = Path(settings.UPLOAD_DIRECTORY) / character_filename
     
-    with open(input_path, "wb") as buffer:
-        content = await file.read()
+    with open(character_path, "wb") as buffer:
+        content = await character_file.read()
+        buffer.write(content)
+    
+    # Save reference file
+    ref_extension = Path(reference_file.filename).suffix
+    reference_filename = f"{job_id}_reference{ref_extension}"
+    reference_path = Path(settings.UPLOAD_DIRECTORY) / reference_filename
+    
+    with open(reference_path, "wb") as buffer:
+        content = await reference_file.read()
         buffer.write(content)
     
     # Create job record
     job_data = {
         "id": job_id,
         "status": "processing",
-        "prompt": prompt,
-        "input_file": input_filename,
+        "character_file": character_filename,
+        "reference_file": reference_filename,
         "output_file": None,
         "error": None,
         "created_at": datetime.now().isoformat(),
@@ -92,7 +170,7 @@ async def upload_video(
         json.dump(job_data, f)
     
     # Start processing in background
-    asyncio.create_task(process_video(job_id, str(input_path), prompt))
+    asyncio.create_task(process_video(job_id, str(character_path), str(reference_path)))
     
     return {"job_id": job_id, "status": "processing"}
 
@@ -108,7 +186,7 @@ async def get_job_status(job_id: str):
     
     return job_data
 
-async def process_video(job_id: str, input_path: str, prompt: str):
+async def process_video(job_id: str, character_path: str, reference_path: str):
     """Process video with Runway Act Two API"""
     job_file = Path(settings.JOBS_DIRECTORY) / f"{job_id}.json"
     
@@ -118,7 +196,7 @@ async def process_video(job_id: str, input_path: str, prompt: str):
             job_data = json.load(f)
         
         # Call Runway API
-        result = await runway_client.process_video(input_path, prompt)
+        result = await runway_client.process_video(character_path, reference_path)
         
         if result["success"]:
             # Save output file

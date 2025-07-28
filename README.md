@@ -1,6 +1,6 @@
-# Sports Editor - AI Video Animation Platform
+# Performance Transfer Studio - AI Character Animation Platform
 
-A full-stack application that allows users to upload videos and transform them using AI-powered animation via Runway's Act Two API.
+A full-stack application that transfers performances between characters using Runway's Act Two API. Upload a character video and a reference performance, and watch the character mimic the reference's movements and expressions.
 
 ## Architecture
 
@@ -25,11 +25,11 @@ Infrastructure
 
 ## Workflow
 
-1. **Upload**: User uploads video file (MP4, WebM, MOV)
-2. **Prompt**: User enters animation prompt (e.g., "change colors to neon, add sparkles")
-3. **Process**: Backend calls Runway Act Two API asynchronously
-4. **Monitor**: Real-time status updates via WebSocket
-5. **Download**: User receives processed video
+1. **Upload Character**: User uploads video of the character to animate
+2. **Upload Reference**: User uploads video of the performance to transfer
+3. **Process**: Backend calls Runway Act Two API to transfer performance
+4. **Monitor**: Real-time status updates via polling
+5. **Download**: User receives character performing the reference movements
 
 ## Runway API Integration
 
@@ -89,14 +89,14 @@ npm start
 
 ## API Endpoints
 
-### Upload Video
+### Upload Videos
 ```http
 POST /api/upload
 Content-Type: multipart/form-data
 
 {
-  "file": <video_file>,
-  "prompt": "animation instructions"
+  "character_file": <character_video>,
+  "reference_file": <reference_performance>
 }
 ```
 

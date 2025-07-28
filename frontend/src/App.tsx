@@ -13,13 +13,14 @@ interface Job {
 }
 
 function App() {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [prompt, setPrompt] = useState('');
+  const [characterFile, setCharacterFile] = useState<File | null>(null);
+  const [referenceFile, setReferenceFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [currentJob, setCurrentJob] = useState<Job | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const characterInputRef = useRef<HTMLInputElement>(null);
+  const referenceInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCharacterSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       // Validate file type
@@ -34,13 +35,32 @@ function App() {
         return;
       }
       
-      setSelectedFile(file);
+      setCharacterFile(file);
+    }
+  };
+
+  const handleReferenceSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('video/')) {
+        alert('Please select a video file');
+        return;
+      }
+      
+      // Validate file size (16MB)
+      if (file.size > 16 * 1024 * 1024) {
+        alert('File size must be less than 16MB');
+        return;
+      }
+      
+      setReferenceFile(file);
     }
   };
 
   const handleUpload = async () => {
-    if (!selectedFile || !prompt.trim()) {
-      alert('Please select a video file and enter a prompt');
+    if (!characterFile || !referenceFile) {
+      alert('Please select both character and reference videos');
       return;
     }
 
@@ -48,8 +68,8 @@ function App() {
     
     try {
       const formData = new FormData();
-      formData.append('file', selectedFile);
-      formData.append('prompt', prompt.trim());
+      formData.append('character_file', characterFile);
+      formData.append('reference_file', referenceFile);
 
       const response = await fetch('/api/upload', {
         method: 'POST',
@@ -94,11 +114,14 @@ function App() {
   };
 
   const resetForm = () => {
-    setSelectedFile(null);
-    setPrompt('');
+    setCharacterFile(null);
+    setReferenceFile(null);
     setCurrentJob(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+    if (characterInputRef.current) {
+      characterInputRef.current.value = '';
+    }
+    if (referenceInputRef.current) {
+      referenceInputRef.current.value = '';
     }
   };
 
@@ -110,41 +133,55 @@ function App() {
     <div className="app">
       <div className="container">
         <header className="header">
-          <h1>🎬 Sports Editor</h1>
-          <p>Transform your videos with AI-powered animation</p>
+          <h1>🎭 Performance Transfer Studio</h1>
+          <p>Transfer performances between characters using AI</p>
         </header>
 
-        <div className="upload-section">
-          <div className="file-input-wrapper">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="video/*"
-              onChange={handleFileSelect}
-              className="file-input"
-              id="video-input"
-            />
-            <label htmlFor="video-input" className="file-input-label">
-              {selectedFile ? selectedFile.name : 'Choose video file'}
-            </label>
-          </div>
+                <div className="upload-section">
+          <div className="upload-grid">
+            <div className="file-input-wrapper">
+              <h3>Character Video</h3>
+              <input
+                ref={characterInputRef}
+                type="file"
+                accept="video/*"
+                onChange={handleCharacterSelect}
+                className="file-input"
+                id="character-input"
+              />
+              <label htmlFor="character-input" className="file-input-label">
+                {characterFile ? characterFile.name : 'Choose character video'}
+              </label>
+              <p className="file-description">
+                Video of the person/character you want to animate
+              </p>
+            </div>
 
-          <div className="prompt-input-wrapper">
-            <textarea
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              placeholder="Describe your animation idea... (e.g., 'change colors to neon, add sparkle effects')"
-              className="prompt-input"
-              rows={3}
-            />
+            <div className="file-input-wrapper">
+              <h3>Reference Performance</h3>
+              <input
+                ref={referenceInputRef}
+                type="file"
+                accept="video/*"
+                onChange={handleReferenceSelect}
+                className="file-input"
+                id="reference-input"
+              />
+              <label htmlFor="reference-input" className="file-input-label">
+                {referenceFile ? referenceFile.name : 'Choose reference video'}
+              </label>
+              <p className="file-description">
+                Video of the performance you want to transfer
+              </p>
+            </div>
           </div>
 
           <button
             onClick={handleUpload}
-            disabled={!selectedFile || !prompt.trim() || isUploading}
+            disabled={!characterFile || !referenceFile || isUploading}
             className="upload-button"
           >
-            {isUploading ? 'Uploading...' : 'Transform Video'}
+            {isUploading ? 'Processing...' : 'Transfer Performance'}
           </button>
         </div>
 
@@ -157,7 +194,7 @@ function App() {
               {currentJob.status === 'failed' && '❌ Failed'}
             </div>
             
-            <p><strong>Prompt:</strong> {currentJob.prompt}</p>
+            <p><strong>Performance Transfer:</strong> Character → Reference</p>
             
             {currentJob.status === 'processing' && (
               <div className="loading-spinner">
