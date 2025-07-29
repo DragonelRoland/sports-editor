@@ -131,81 +131,121 @@ function App() {
 
   return (
     <div className="app">
-      <div className="container">
-        <header className="header">
-          <h1>🎭 Performance Transfer Studio</h1>
-          <p>Transfer performances between characters using AI</p>
-        </header>
+              <div className="container">
+          <header className="header">
+            <h1>⚽ SportsVoice AI</h1>
+            <p>Transform any athlete into your perfect sports interviewer using AI</p>
+            <div className="subtitle">
+              Upload your favorite player + reference interview → Get your custom sports content
+            </div>
+            <div className="demo-section">
+              <p>🎯 <strong>Perfect for:</strong> Sports content creators, podcasters, social media managers</p>
+              <p>🔥 <strong>Use cases:</strong> Custom interviews, sports commentary, social media content</p>
+            </div>
+          </header>
 
                 <div className="upload-section">
-          <div className="upload-grid">
-            <div className="file-input-wrapper">
-              <h3>Character Video</h3>
-              <input
-                ref={characterInputRef}
-                type="file"
-                accept="video/*"
-                onChange={handleCharacterSelect}
-                className="file-input"
-                id="character-input"
-              />
-              <label htmlFor="character-input" className="file-input-label">
-                {characterFile ? characterFile.name : 'Choose character video'}
-              </label>
-              <p className="file-description">
-                Video of the person/character you want to animate
-              </p>
+                      <div className="upload-grid">
+              <div className="file-input-wrapper">
+                <h3>🏈 Your Athlete</h3>
+                <input
+                  ref={characterInputRef}
+                  type="file"
+                  accept="video/*"
+                  onChange={handleCharacterSelect}
+                  className="file-input"
+                  id="character-input"
+                />
+                <label htmlFor="character-input" className="file-input-label">
+                  {characterFile ? characterFile.name : 'Upload athlete video'}
+                </label>
+                <p className="file-description">
+                  Video of your favorite player (clear face shot works best)
+                </p>
+                <div className="example-text">
+                  💡 Example: Messi celebration, Ronaldo interview, LeBron press conference
+                </div>
+              </div>
+
+              <div className="file-input-wrapper">
+                <h3>🎤 Interview Style</h3>
+                <input
+                  ref={referenceInputRef}
+                  type="file"
+                  accept="video/*"
+                  onChange={handleReferenceSelect}
+                  className="file-input"
+                  id="reference-input"
+                />
+                <label htmlFor="reference-input" className="file-input-label">
+                  {referenceFile ? referenceFile.name : 'Upload interview reference'}
+                </label>
+                <p className="file-description">
+                  Professional interviewer or presenter style to copy
+                </p>
+                <div className="example-text">
+                  💡 Example: ESPN anchor, sports reporter, podcast host
+                </div>
+              </div>
             </div>
 
-            <div className="file-input-wrapper">
-              <h3>Reference Performance</h3>
-              <input
-                ref={referenceInputRef}
-                type="file"
-                accept="video/*"
-                onChange={handleReferenceSelect}
-                className="file-input"
-                id="reference-input"
-              />
-              <label htmlFor="reference-input" className="file-input-label">
-                {referenceFile ? referenceFile.name : 'Choose reference video'}
-              </label>
-              <p className="file-description">
-                Video of the performance you want to transfer
-              </p>
-            </div>
-          </div>
-
-          <button
-            onClick={handleUpload}
-            disabled={!characterFile || !referenceFile || isUploading}
-            className="upload-button"
-          >
-            {isUploading ? 'Processing...' : 'Transfer Performance'}
-          </button>
+                      <button
+              onClick={handleUpload}
+              disabled={!characterFile || !referenceFile || isUploading}
+              className="upload-button"
+            >
+              {isUploading ? 'Creating Sports Content...' : '🚀 Create Sports Interview'}
+            </button>
         </div>
 
         {currentJob && (
           <div className="job-status">
-            <h3>Processing Status</h3>
+            <h3>🎬 Production Status</h3>
             <div className={`status-badge ${currentJob.status}`}>
-              {currentJob.status === 'processing' && '⏳ Processing...'}
-              {currentJob.status === 'completed' && '✅ Completed'}
-              {currentJob.status === 'failed' && '❌ Failed'}
+              {currentJob.status === 'processing' && '⏳ Creating Sports Interview...'}
+              {currentJob.status === 'completed' && '✅ Sports Content Ready!'}
+              {currentJob.status === 'failed' && '❌ Production Failed'}
             </div>
             
-            <p><strong>Performance Transfer:</strong> Character → Reference</p>
+            <p><strong>AI Magic:</strong> Athlete + Interview Style = Custom Content</p>
+            
+            {/* Video Preview Section */}
+            <div className="video-preview-section">
+              <div className="video-preview-grid">
+                <div className="video-preview">
+                  <h4>🏈 Original Athlete</h4>
+                  {characterFile && (
+                    <video 
+                      controls 
+                      className="preview-video"
+                      src={URL.createObjectURL(characterFile)}
+                    />
+                  )}
+                </div>
+                <div className="video-preview">
+                  <h4>🎤 Interview Reference</h4>
+                  {referenceFile && (
+                    <video 
+                      controls 
+                      className="preview-video"
+                      src={URL.createObjectURL(referenceFile)}
+                    />
+                  )}
+                </div>
+              </div>
+            </div>
             
             {currentJob.status === 'processing' && (
               <div className="loading-spinner">
                 <div className="spinner"></div>
-                <p>This may take a few minutes...</p>
+                <p>🔥 AI is working its magic... This may take a few minutes.</p>
+                <p>We're transferring the interview style to your athlete!</p>
               </div>
             )}
             
             {currentJob.status === 'completed' && currentJob.output_file && (
               <div className="result-section">
-                <h4>Your transformed video is ready!</h4>
+                <h4>🎯 Your Sports Interview</h4>
                 <video
                   controls
                   className="result-video"
@@ -219,7 +259,7 @@ function App() {
                     download={currentJob.output_file}
                     className="download-button"
                   >
-                    Download Video
+                    📥 Download Sports Interview
                   </a>
                 </div>
               </div>
@@ -227,12 +267,21 @@ function App() {
             
             {currentJob.status === 'failed' && (
               <div className="error-section">
-                <p><strong>Error:</strong> {currentJob.error}</p>
+                <h4>⚠️ Production Issue:</h4>
+                <p className="error-message">{currentJob.error}</p>
+                <div className="error-help">
+                  <p><strong>💡 Tips for better results:</strong></p>
+                  <ul>
+                    <li>Use clear face shots of athletes</li>
+                    <li>Choose professional interview videos</li>
+                    <li>Ensure good lighting in both videos</li>
+                  </ul>
+                </div>
               </div>
             )}
             
             <button onClick={resetForm} className="reset-button">
-              Start New Project
+              🎬 Create New Sports Content
             </button>
           </div>
         )}

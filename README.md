@@ -1,6 +1,6 @@
-# Performance Transfer Studio - AI Character Animation Platform
+# SportsVoice AI - Sports Interview Generator
 
-A full-stack application that transfers performances between characters using Runway's Act Two API. Upload a character video and a reference performance, and watch the character mimic the reference's movements and expressions.
+A full-stack application that transforms athletes into professional sports interviewers using Runway's Act Two API. Upload your favorite athlete video and a professional interview reference, and create custom sports content with AI-powered performance transfer.
 
 ## Architecture
 
