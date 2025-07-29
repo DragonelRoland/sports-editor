@@ -122,7 +122,7 @@ class RunwayClient:
                         failure_code = getattr(task_info, 'failure_code', None)
                         
                         if failure_code == 'NO_FACE_FOUND':
-                            error_details = "No face detected in videos. Runway Act Two requires clear, visible faces in both character and reference videos. Try videos with:\n• Front-facing faces\n• Good lighting\n• Minimal motion blur\n• Close-up or medium shots"
+                            error_details = f"No face detected in videos.\n\nYour videos:\n• Character: {Path(character_path).name}\n• Reference: {Path(reference_path).name}\n\nOne or both videos lack detectable faces. Runway Act Two requires:\n• Front-facing faces\n• Good lighting\n• Minimal motion blur\n• Close-up or medium shots\n\nTry testing each video individually by using the same video for both character and reference to isolate which one has the issue."
                         else:
                             error_details = failure or str(wait_error)
                             

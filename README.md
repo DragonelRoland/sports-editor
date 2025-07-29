@@ -2,42 +2,56 @@
 
 A full-stack application that transforms athletes into professional sports interviewers using Runway's Act Two API. Upload your favorite athlete video and a professional interview reference, and create custom sports content with AI-powered performance transfer.
 
-## Architecture
-
-```
-Frontend (React + TypeScript)
-├── Video Upload Component
-├── Prompt Input Interface  
-├── Processing Status Display
-└── Results Viewer
-
-Backend (FastAPI + Python)
-├── File Upload API
-├── Runway Act Two Integration
-├── Job Queue Management
-└── WebSocket Status Updates
-
-Infrastructure
-├── PostgreSQL (job tracking)
-├── Redis + Celery (async processing)
-└── AWS S3 (video storage)
-```
-
 ## Workflow
 
-1. **Upload Character**: User uploads video of the character to animate
-2. **Upload Reference**: User uploads video of the performance to transfer
-3. **Process**: Backend calls Runway Act Two API to transfer performance
+1. **Upload Athlete**: User uploads video of their favorite sports player
+2. **Upload Interview Style**: User uploads professional interview/presenter reference
+3. **AI Processing**: Backend calls Runway Act Two API to transfer interview style to athlete
 4. **Monitor**: Real-time status updates via polling
-5. **Download**: User receives character performing the reference movements
+5. **Download**: User receives custom sports interview content
+
+## Video Requirements & Limitations
+
+### ✅ **What Works Best**
+- **Resolution**: 720p (1280x720) or higher recommended
+- **Duration**: 2-10 seconds optimal
+- **Face Requirements**: 
+  - Clear, front-facing faces
+  - Good lighting (not dark or shadowy)
+  - Faces should fill a significant portion of the frame
+  - Minimal motion blur
+- **Format**: MP4 with H.264 codec
+- **Content**: Talking head videos, interviews, press conferences, award ceremonies
+
+### ❌ **Common Issues**
+- **Low Resolution**: Videos below 720p often fail face detection
+- **Poor Lighting**: Dark or poorly lit faces won't be detected
+- **Fast Motion**: Sports action shots with motion blur
+- **Wide Shots**: Faces too small in the frame
+- **Profile Views**: Side-angle faces (need front-facing)
+- **Obstructed Faces**: Masks, sunglasses, or partial coverage
+
+### 🎯 **Best Practices**
+- **Test with phone recordings**: Modern phone cameras work great
+- **Use interview/press conference footage**: These typically have ideal face positioning
+- **Avoid sports action clips**: Use post-game interviews instead
+- **Debug tip**: Upload the same video for both character and reference to test if it has a detectable face
+
+### 🔧 **Troubleshooting**
+If you get "No face found" errors:
+1. Check video resolution (should be 720p+)
+2. Ensure faces are clearly visible and well-lit
+3. Try the same video for both inputs to isolate which video is problematic
+4. Record a simple selfie video as a test case
 
 ## Runway API Integration
 
-Using Runway's Act Two model for character performance control:
-- Endpoint: `/v1/character_performance`
-- Supports: Color changes, object insertion, style transfers
+Using Runway's Act Two model for character performance transfer:
+- Model: `act_two` via `character_performance` endpoint
+- Transfers facial expressions and movements between videos
 - Input formats: MP4, WebM, MOV (max 16MB)
-- Output ratios: 1280:720, 1584:672, 1104:832, 720:1280, 832:1104, 960:960
+- Output ratio: 1280:720 (HD sports broadcast format)
+- Face detection required in both character and reference videos
 
 ## Project Structure
 
@@ -109,11 +123,3 @@ GET /api/jobs/{job_id}/status
 ```
 ws://localhost:8000/ws/jobs/{job_id}
 ```
-
-## Next Steps
-
-1. Set up basic project structure
-2. Implement video upload interface
-3. Build Runway API integration
-4. Add async job processing
-5. Create real-time status updates 
